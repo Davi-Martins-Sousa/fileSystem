@@ -15,11 +15,14 @@ import operatingSystem.Kernel;
 public class MyKernel implements Kernel {
 
     private Diretorio raiz;
+    private Diretorio atualDiretorio;
 
     public MyKernel() {
 
-        this.raiz = new Diretorio("/",null);
+        this.raiz = new Diretorio();
+        raiz.mkdir("/",null);
         raiz.setDiretorioPai(raiz);
+        atualDiretorio = raiz;
 
     }
 
@@ -30,8 +33,8 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
-        System.out.println("ola pessoal!");
-
+        //System.out.println("ola pessoal!");
+        atualDiretorio.ls();
         //fim da implementacao do aluno
         return result;
     }
@@ -43,6 +46,8 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        Diretorio novoDiretorio = new Diretorio();
+        novoDiretorio.mkdir(parameters, atualDiretorio);
         //fim da implementacao do aluno
         return result;
     }

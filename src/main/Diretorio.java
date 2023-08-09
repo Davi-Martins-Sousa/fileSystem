@@ -10,20 +10,34 @@ public class Diretorio {
     private LocalDateTime dataCriacao;
     private String permicao;
 
-    public Diretorio mkdir(String diretorioNome) {
-        Diretorio novoDiretorio = new Diretorio(diretorioNome,this);
-        this.diretorioFilhos.add(novoDiretorio);
-        return novoDiretorio;
-    }
-
-    //Construtor
-    public Diretorio(String diretorioNome,Diretorio diretorioPai) {
+    //mkdir - cria diretorios
+    public Diretorio mkdir(String diretorioNome,Diretorio diretorioPai) {
         this.diretorioNome = diretorioNome;
         this.diretorioPai = diretorioPai;
         this.permicao = "drwxrwxrwx";
         this.dataCriacao = LocalDateTime.now();
         this.diretorioFilhos = new ArrayList<Diretorio>();
+
+        if (diretorioPai != null) {
+            diretorioPai.diretorioFilhos.add(this);
+        }
+
+        return this;
     }
+
+    //ls: lista diretorios filhos
+    public void ls() {
+        if (diretorioFilhos.isEmpty()) {
+            //System.out.println( diretorioNome +" não possue diretórios filhos.");
+            return;
+        }
+
+        //System.out.println("Diretórios filhos de " + diretorioNome + ":");
+        for (Diretorio filho : diretorioFilhos) {
+            System.out.println("\t"+filho.getDiretorioNome());
+        }
+    }
+
     // Getters e Setters
     public String getDiretorioNome() {
         return diretorioNome;
