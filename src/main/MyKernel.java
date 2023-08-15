@@ -16,6 +16,8 @@ public class MyKernel implements Kernel {
 
     private Diretorio raiz;
     private Diretorio atualDiretorio;
+    private Diretorio temporarioDiretorio;
+    private String currentDir = "/";
 
     public MyKernel() {
 
@@ -23,7 +25,6 @@ public class MyKernel implements Kernel {
         raiz.mkdir("/",null);
         raiz.setDiretorioPai(raiz);
         atualDiretorio = raiz;
-
     }
 
     public String ls(String parameters) {
@@ -34,7 +35,7 @@ public class MyKernel implements Kernel {
 
         //inicio da implementacao do aluno
         //System.out.println("ola pessoal!");
-        atualDiretorio.ls();
+        result = atualDiretorio.ls(parameters, raiz);
         //fim da implementacao do aluno
         return result;
     }
@@ -47,7 +48,10 @@ public class MyKernel implements Kernel {
 
         //inicio da implementacao do aluno
         Diretorio novoDiretorio = new Diretorio();
-        novoDiretorio.mkdir(parameters, atualDiretorio);
+        temporarioDiretorio = novoDiretorio.mkdir(parameters, atualDiretorio);
+        if(temporarioDiretorio == null){
+            result = "O nome do diretorio é inválido";
+        }
         //fim da implementacao do aluno
         return result;
     }
@@ -55,13 +59,43 @@ public class MyKernel implements Kernel {
     public String cd(String parameters) {
         //variavel result deverah conter o que vai ser impresso na tela apos comando do usuário
         String result = "";
-        String currentDir = "";
+        //String currentDir = "";
         System.out.println("Chamada de Sistema: cd");
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        Diretorio antigoDiretorio = atualDiretorio;
+        atualDiretorio = atualDiretorio.cd(parameters);
+
+
+        if(atualDiretorio ==  antigoDiretorio){
+            result = "Diretório não existe.";
+        }
+
+        else if (parameters.equals("..")) {
+            if (currentDir.equals("/")) {
+                result = "Não é possivel voltar mais!";
+            } else {
+                // Find the last index of '/' to go back one level.
+                int lastIndex = currentDir.lastIndexOf("/");
+                if (lastIndex != -1) {
+                    currentDir = currentDir.substring(0, lastIndex);
+                    if (currentDir.isEmpty()) {
+                        currentDir = "/";
+                    }
+                }
+            }
+        }
+
+        else{
+            if(currentDir.equals("/")){
+                currentDir = "";
+            }
+            currentDir = currentDir + "/" + parameters;
+        }
+
         //indique o diretório atual. Por exemplo... /
-        currentDir = "/";
+        //currentDir = "/";
 
         //setando parte gráfica do diretorio atual
         operatingSystem.fileSystem.FileSytemSimulator.currentDir = currentDir;
