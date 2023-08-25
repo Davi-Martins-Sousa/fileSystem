@@ -188,6 +188,8 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        result = atualDiretorio.rmdir(parameters, raiz);
+
         // fim da implementacao do aluno
         return result;
     }

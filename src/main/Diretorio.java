@@ -12,8 +12,16 @@ public class Diretorio {
     private LocalDateTime dataCriacao;
     private String permicao;
 
-    public Diretorio encontraDiretorio(String caminho, Diretorio raiz) {
+    public Diretorio encontraDiretorio(String caminho, Diretorio raiz, Diretorio atualDiretorio) {
         String[] caminhoDiretorio = new String[0];
+        Diretorio diretorioAtual;
+        
+
+        if (caminho.startsWith("/")) {
+            diretorioAtual = raiz;
+        } else {
+             diretorioAtual = atualDiretorio;
+        }
 
         caminho = caminho.replaceFirst("^/|^\\./", ""); // Remove o "/" ou "./" do início da string caminho
         caminhoDiretorio = caminho.split("/");
@@ -21,8 +29,7 @@ public class Diretorio {
         for (String parte : caminhoDiretorio) {
             System.out.println("parte do caminho: " + parte);
         }
-
-        Diretorio diretorioAtual = raiz;
+       
 
         for (String parte : caminhoDiretorio) {
             if (!parte.isEmpty()) {
@@ -97,9 +104,9 @@ public class Diretorio {
             }
         }
 
-        alvoDiretorio = encontraDiretorio(caminho, raiz);
+        alvoDiretorio = encontraDiretorio(caminho, raiz, this);
         if (alvoDiretorio == null) {
-            return "Caminho Incorreto";
+            return "Caminho incorreto";
         }
 
         else if (alvoDiretorio.diretorioFilhos.isEmpty() && alvoDiretorio.arquivosFilhos.isEmpty()) {
@@ -153,6 +160,21 @@ public class Diretorio {
     // cd: navega entre os diretorios
     public Diretorio cd(String parameters) {
         return null; // Retorna o próprio diretório se não encontrar o subdiretório desejado
+    }
+
+    // rmdir: remove diretorio sem filhos
+    public String rmdir(String parameters, Diretorio raiz) {
+        Diretorio alvoDiretorio =  encontraDiretorio(parameters,raiz,this);
+        
+        if (alvoDiretorio == null) {
+            return "Caminho incorreto!";
+        }else if (alvoDiretorio.diretorioFilhos.isEmpty() && alvoDiretorio.arquivosFilhos.isEmpty()){
+            alvoDiretorio.diretorioPai.diretorioFilhos.remove(alvoDiretorio);
+            alvoDiretorio = null;
+            return "Diretorio apagado.";
+        }else{
+            return "Diretorio possui filhos e não pode ser apagado!";
+        }
     }
 
     // Getters e Setters
