@@ -63,10 +63,10 @@ public class MyKernel implements Kernel {
 
         for (String parte : nomesDiretorio) {
             if (!parte.equals(".")) {
-                if ((parte.contains("/")) || (!parte.matches("^[A-Za-z0-9].*"))) {
+                if ((parte.contains(" ")) || (!parte.matches("^[A-Za-z0-9].*"))) {
                     // throw new IllegalArgumentException("O nome do diretório não está em um
                     // formato válido.");
-                    result = "Nome de diretório pode começar apenas com letras e números!";
+                    result = "Nome de diretório pode começar apenas com letras e números e não pode conter espaços!";
                 }
                 if (parte == nomesDiretorio[nomesDiretorio.length - 1]) {
                     for (Diretorio filho : temporarioAtualDiretorio.getDiretorioFilhos()) {
@@ -250,6 +250,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        result = atualDiretorio.createfile(parameters, raiz);
         // fim da implementacao do aluno
         return result;
     }
@@ -262,6 +263,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        result = atualDiretorio.cat(parameters, raiz);
         // fim da implementacao do aluno
         return result;
     }
@@ -298,9 +300,9 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: sem parametros");
 
         // nome do aluno
-        String name = "Fulano da Silva";
+        String name = "Davi Martins";
         // numero de matricula
-        String registration = "2001.xx.yy.00.11";
+        String registration = "2018.11.02.00.06";
         // versao do sistema de arquivos
         String version = "0.1";
 

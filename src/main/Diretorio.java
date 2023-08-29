@@ -18,12 +18,12 @@ public class Diretorio {
         
 
         if (caminho.startsWith("/")) {
+            caminho = caminho.replaceFirst("/", ""); // Remove o "/" do início da string caminho
             diretorioAtual = raiz;
         } else {
-             diretorioAtual = atualDiretorio;
+            diretorioAtual = atualDiretorio;
         }
 
-        caminho = caminho.replaceFirst("^/|^\\./", ""); // Remove o "/" ou "./" do início da string caminho
         caminhoDiretorio = caminho.split("/");
 
         for (String parte : caminhoDiretorio) {
@@ -32,10 +32,15 @@ public class Diretorio {
        
 
         for (String parte : caminhoDiretorio) {
-            if (!parte.isEmpty()) {
+            if (!parte.equals(".")) {
                 boolean encontrado = false;
                 for (Diretorio filho : diretorioAtual.diretorioFilhos) {
-                    if (filho.getDiretorioNome().equals(parte)) {
+                    if(parte.equals("..")){
+                        encontrado = true;
+                        diretorioAtual = diretorioAtual.diretorioPai;
+                        break;
+                    }
+                    else if (filho.getDiretorioNome().equals(parte)) {
                         diretorioAtual = filho;
                         encontrado = true;
                         break;
@@ -117,7 +122,7 @@ public class Diretorio {
             for (Diretorio filho : alvoDiretorio.diretorioFilhos) {
                 result.append(filho.getDiretorioNome()).append(" ");
             }
-            for (Arquivo filho : this.arquivosFilhos) {
+            for (Arquivo filho : alvoDiretorio.arquivosFilhos) {
                 result.append(filho.getArquivoNome()).append(" ");
             }
             return result.toString().trim();
@@ -130,7 +135,7 @@ public class Diretorio {
                 result.append(filho.getPermicao()).append(" ");
                 result.append("\n");
             }
-            for (Arquivo filho : this.arquivosFilhos) {
+            for (Arquivo filho : alvoDiretorio.arquivosFilhos) {
                 result.append(filho.getArquivoNome()).append(" ");
                 result.append(filho.getDataCriacao()).append(" ");
                 result.append(filho.getPermicao()).append(" ");
@@ -176,6 +181,99 @@ public class Diretorio {
             return "Diretorio possui filhos e não pode ser apagado!";
         }
     }
+
+    // createfile: cria arquivo de texto
+    public String createfile(String parameters, Diretorio raiz) {
+        String caminho = "";
+        String nome = "";
+        String caminho_Nome = "";
+        String conteudo = "";
+        String[] partes = parameters.split(" ", 2);
+
+        if (partes.length >= 2) {
+            caminho_Nome = partes[0];
+            conteudo = partes[1];
+        } else if (partes.length == 1) {
+            caminho_Nome = partes[0];
+            conteudo = "";
+        }
+
+        int lastIndex = caminho_Nome.lastIndexOf('/');
+        if (lastIndex >= 0 && lastIndex < caminho_Nome.length() - 1) {
+            caminho = caminho_Nome.substring(0, lastIndex);
+            nome = caminho_Nome.substring(lastIndex + 1);
+        } else {
+            nome = caminho_Nome;
+            caminho = ".";
+        }
+
+        System.out.println("Caminho: " + caminho);
+        System.out.println("Nome: " + nome);
+        System.out.println("Conteudo: "+conteudo);
+
+        if ((nome.contains(" ")) || (!nome.matches("^[A-Za-z0-9].*"))) {
+            return "Nome de diretório pode começar apenas com letras e números e não pode conter espaços!";
+        }
+
+        Diretorio alvoDiretorio = encontraDiretorio(caminho, raiz, this);
+
+        System.out.println("nome diretorio pai "+alvoDiretorio.getDiretorioNome());
+
+        if(alvoDiretorio.equals(null)){
+            return "Caminho incorreto!";
+        }
+
+        for (Arquivo filho : alvoDiretorio.arquivosFilhos) {
+            if(filho.getArquivoNome().equals(nome)){
+                return "Já existe um arquivo com este nome neste diretório!";
+            }
+        }
+
+        Arquivo arquivo = new Arquivo();
+        arquivo.setArquivoNome(nome);
+        arquivo.setDataCriacao(LocalDateTime.now());
+        arquivo.setPermicao("drwxrwxrwx");
+        arquivo.setTexto(conteudo);
+
+        alvoDiretorio.arquivosFilhos.add(arquivo);
+
+        return "Arquivo "+nome+" criado!";
+    }
+     public String cat(String parameters, Diretorio raiz) {
+        String caminho;
+        String nome;
+        int lastIndex = parameters.lastIndexOf('/');
+
+        if (lastIndex >= 0 && lastIndex < parameters.length() - 1) {
+            caminho = parameters.substring(0, lastIndex);
+            nome = parameters.substring(lastIndex + 1);
+        } else {
+            nome = parameters;
+            caminho = ".";
+        }
+
+        System.out.println("Caminho: " + caminho);
+        System.out.println("Nome: " + nome);
+
+        Diretorio alvoDiretorio = encontraDiretorio(caminho, raiz, this);
+
+        System.out.println("nome diretorio pai "+alvoDiretorio.getDiretorioNome());
+
+        if(alvoDiretorio.equals(null)){
+            return "Caminho incorreto!";
+        }
+
+        for (Arquivo filho : alvoDiretorio.arquivosFilhos) {
+            if(filho.getArquivoNome().equals(nome)){
+                if(filho.getTexto().equals("")){
+                    return"Arquivo vazio!";
+                }
+                return filho.getTexto();
+            }
+        }
+
+        return "Arquivo vazio!";
+     }
 
     // Getters e Setters
     public String getDiretorioNome() {

@@ -6,6 +6,7 @@ public class Arquivo {
     private Diretorio diretorioPai;
     private LocalDateTime dataCriacao;
     private String permicao;
+    private String texto;
 
     // Getter and Setter
     public String getArquivoNome() {
@@ -38,5 +39,13 @@ public class Arquivo {
 
     public void setPermicao(String permicao) {
         this.permicao = permicao;
+    }
+
+    public String getTexto() {
+        return texto;
+    }
+
+    public void setTexto(String texto) {
+        this.texto = texto;
     }
 }
