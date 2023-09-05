@@ -202,6 +202,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        result = atualDiretorio.cp(parameters, raiz);
         // fim da implementacao do aluno
         return result;
     }
@@ -214,6 +215,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         // inicio da implementacao do aluno
+        result = atualDiretorio.mv(parameters, raiz);
         // fim da implementacao do aluno
         return result;
     }

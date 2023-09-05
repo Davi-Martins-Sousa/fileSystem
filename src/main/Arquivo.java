@@ -2,11 +2,11 @@ package main;
 import java.time.LocalDateTime;
 
 public class Arquivo {
-    private String arquivoNome;
-    private Diretorio diretorioPai;
-    private LocalDateTime dataCriacao;
-    private String permicao;
-    private String texto;
+    protected String arquivoNome = "";
+    protected Diretorio diretorioPai;
+    protected LocalDateTime dataCriacao;
+    protected String permicao;
+    protected String texto;
 
     // Getter and Setter
     public String getArquivoNome() {

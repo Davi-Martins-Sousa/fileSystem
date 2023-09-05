@@ -2,6 +2,7 @@ package main;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.net.SocketAddress;
 import java.time.LocalDateTime;
 
 public class Diretorio {
@@ -15,6 +16,12 @@ public class Diretorio {
     public Diretorio encontraDiretorio(String caminho, Diretorio raiz, Diretorio atualDiretorio) {
         String[] caminhoDiretorio = new String[0];
         Diretorio diretorioAtual;
+
+        if(caminho.equals("/")){
+            System.out.println("parte do caminho: raiz");
+            System.out.println("diretorio encontrado: raiz");
+            return raiz;
+        }
         
 
         if (caminho.startsWith("/")) {
@@ -47,11 +54,13 @@ public class Diretorio {
                     }
                 }
                 if (!encontrado) {
+                    System.out.println("Caminho não encontrado");
                     return null; // Se não encontrar algum diretório, retorna null
                 }
             }
         }
 
+        System.out.println("diretorio encontrado: "+diretorioAtual.getDiretorioNome());
         return diretorioAtual;
     }
 
@@ -182,6 +191,179 @@ public class Diretorio {
         }
     }
 
+    public String cp(String parameters, Diretorio raiz){
+        String parametro = "";
+        String origem = "";
+        String destino = "";
+        String nomeArquivo;
+        Arquivo origemArquivo = null;
+        Diretorio origemDiretorio = null;
+        Diretorio destinoDiretorio = null;
+
+        if (parameters.startsWith("-r ")){
+            parameters = parameters.replaceFirst("-r ", "");
+            parametro = "-r";
+        }
+
+        String[] partes = parameters.split(" ", 2);
+
+        if (partes.length >= 2) {
+            origem = partes[0];
+            destino = partes[1];
+        } else  {
+            return "Parametro incorreto!";
+        }
+
+        System.out.println("Parametro: " + parametro);
+        System.out.println("Origem: " + origem);
+        System.out.println("Destino: "+ destino);
+
+        origemDiretorio = encontraDiretorio(origem, raiz, this);
+        destinoDiretorio = encontraDiretorio(destino, raiz, this);
+
+        if(destinoDiretorio == null){
+            return "Caminho de destino incorreto!";
+        }
+
+        if(origemDiretorio == null && parametro.equals("-r")){
+            return "Caminho de origem incorreto!";
+        }
+
+        if(origemDiretorio == null){
+            int lastIndex = origem.lastIndexOf('/');
+            if (lastIndex >= 0 && lastIndex < origem.length() - 1) {
+                origem = origem.substring(0, lastIndex);
+                nomeArquivo = origem.substring(lastIndex + 1);
+                destinoDiretorio = encontraDiretorio(origem, raiz, this);
+                for (Arquivo filho : destinoDiretorio.arquivosFilhos) {
+                    if(filho.getArquivoNome().equals(nomeArquivo)){
+                        origemArquivo = filho;
+                    }
+                }
+            }
+        }
+
+        if(origemArquivo == null && origemDiretorio == null){
+            return "Caminho de origem do arquivo incorreto!";
+        }
+
+        if(parametro.equals("-r") && origemArquivo == null){
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            //FAZER
+            return "";
+
+        }else if (parametro.equals("") && origemArquivo == null){
+            Diretorio diretorio = new Diretorio();
+
+            for (Diretorio filho : destinoDiretorio.diretorioFilhos) {
+                if(filho.getDiretorioNome().equals((origemDiretorio.getDiretorioNome()))){
+                    diretorio.setDiretorioNome(origemDiretorio.getDiretorioNome()+"-novo");
+                }
+            }
+
+            if(diretorio.getDiretorioNome().equals("")){
+                diretorio.setDiretorioNome(origemDiretorio.getDiretorioNome());
+            }
+
+            diretorio.setDataCriacao(origemDiretorio.getDataCriacao());
+            diretorio.setPermicao(origemDiretorio.getPermicao());
+            diretorio.setDiretorioPai(destinoDiretorio);
+            this.diretorioFilhos = new ArrayList<Diretorio>();
+            this.arquivosFilhos = new ArrayList<Arquivo>();
+
+            destinoDiretorio.diretorioFilhos.add(diretorio);
+
+            return "Diretorio copiado.";
+        }else{
+
+            Arquivo arquivo = new Arquivo();
+
+            for (Arquivo filho : destinoDiretorio.arquivosFilhos) {
+                if(filho.getArquivoNome().equals((origemArquivo.getArquivoNome()))){
+                    arquivo.setArquivoNome(origemArquivo.getArquivoNome()+"-novo");
+                }
+            }
+
+            if(arquivo.getArquivoNome().equals("")){
+                arquivo.setArquivoNome(origemArquivo.getArquivoNome());
+            }
+
+            arquivo.setDataCriacao(origemArquivo.getDataCriacao());
+            arquivo.setPermicao(origemArquivo.getPermicao());
+            arquivo.setTexto(origemArquivo.getTexto());
+            arquivo.setDiretorioPai(destinoDiretorio);
+
+            destinoDiretorio.arquivosFilhos.add(arquivo);
+
+            return "Arquivo copiado.";
+        }
+    }
+
+     public String mv(String parameters, Diretorio raiz) {
+
+        String origem = "";
+        String destino = "";
+        String nomeArquivo;
+        Arquivo origemArquivo = null;
+        Diretorio origemDiretorio = null;
+        Diretorio destinoDiretorio = null;
+        String[] partes = parameters.split(" ", 2);
+
+        if (partes.length >= 2) {
+            origem = partes[0];
+            destino = partes[1];
+        } else  {
+            return "Parametro incorreto!";
+        }
+
+        System.out.println("Origem: " + origem);
+        System.out.println("Destino: "+ destino);
+
+        origemDiretorio = encontraDiretorio(origem, raiz, this);
+        destinoDiretorio = encontraDiretorio(destino, raiz, this);
+
+        if(destinoDiretorio == null){
+            return "Caminho de destino incorreto!";
+        }
+
+        if(origemDiretorio == null){
+            int lastIndex = origem.lastIndexOf('/');
+            if (lastIndex >= 0 && lastIndex < origem.length() - 1) {
+                origem = origem.substring(0, lastIndex);
+                nomeArquivo = origem.substring(lastIndex + 1);
+                destinoDiretorio = encontraDiretorio(origem, raiz, this);
+                for (Arquivo filho : destinoDiretorio.arquivosFilhos) {
+                    if(filho.getArquivoNome().equals(nomeArquivo)){
+                        origemArquivo = filho;
+                    }
+                }
+            }
+        }
+
+        if(origemArquivo == null && origemDiretorio == null){
+            return "Caminho de origem incorreto!";
+        }
+
+        if(origemArquivo == null){
+            if(origemDiretorio.getDiretorioPai() == destinoDiretorio.getDiretorioPai()){
+                
+            }
+        }else{
+
+        }
+        return"";
+
+     }
     // createfile: cria arquivo de texto
     public String createfile(String parameters, Diretorio raiz) {
         String caminho = "";
