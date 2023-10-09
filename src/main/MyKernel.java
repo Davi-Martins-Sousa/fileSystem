@@ -18,13 +18,14 @@ import java.util.Date;
  */
 public class MyKernel implements Kernel {
 
-    int dirAtual = 0;
     int raiz = 0;
+    int dirAtual = raiz;
 
     public MyKernel() {
         HardDisk HD = new HardDisk(128);
-        String Raiz = criaDiretorio("/", Integer.toString(raiz));
+        String Raiz = criaDiretorio("/", raiz);
         escreverStringNoHardDisk(HD, Raiz, raiz);
+        desmembrarString(Raiz);
 
         //String lerRaiz = lerStringDoHardDisk(HD, 0, 512);
         //System.out.println(lerRaiz);
@@ -290,70 +291,55 @@ public class MyKernel implements Kernel {
         return binaryArrayToString(bits);
     }
 
-    public static int procuraPosicaoVaziaHD(){
+    //public static int procuraPosicaoVaziaHD(){
 
-    }
+    //}
     
-    public static String criaDiretorio(String nome, String pai) {
+    public static String criaDiretorio(String nome, int dirPai) {
         String estado = "d";
         nome = String.format("%-" + 86 + "s", nome);
-        pai = String.format("%-" + 10 + "s", pai);
-        String filhoDir1 = String.format("%-" + 10 + "s", "");
-        String filhoDir2 = String.format("%-" + 10 + "s", "");
-        String filhoDir3 = String.format("%-" + 10 + "s", "");
-        String filhoDir4 = String.format("%-" + 10 + "s", "");
-        String filhoDir5 = String.format("%-" + 10 + "s", "");
-        String filhoDir6 = String.format("%-" + 10 + "s", "");
-        String filhoDir7 = String.format("%-" + 10 + "s", "");
-        String filhoDir8 = String.format("%-" + 10 + "s", "");
-        String filhoDir9 = String.format("%-" + 10 + "s", "");
-        String filhoDir10 = String.format("%-" + 10 + "s", "");
-        String filhoDir11 = String.format("%-" + 10 + "s", "");
-        String filhoDir12 = String.format("%-" + 10 + "s", "");
-        String filhoDir13 = String.format("%-" + 10 + "s", "");
-        String filhoDir14 = String.format("%-" + 10 + "s", "");
-        String filhoDir15 = String.format("%-" + 10 + "s", "");
-        String filhoDir16 = String.format("%-" + 10 + "s", "");
-        String filhoDir17 = String.format("%-" + 10 + "s", "");
-        String filhoDir18 = String.format("%-" + 10 + "s", "");
-        String filhoDir19 = String.format("%-" + 10 + "s", "");
-        String filhoDir20 = String.format("%-" + 10 + "s", "");
-        String filhoArg1 = String.format("%-" + 10 + "s", "");
-        String filhoArg2 = String.format("%-" + 10 + "s", "");
-        String filhoArg3 = String.format("%-" + 10 + "s", "");
-        String filhoArg4 = String.format("%-" + 10 + "s", "");
-        String filhoArg5 = String.format("%-" + 10 + "s", "");
-        String filhoArg6 = String.format("%-" + 10 + "s", "");
-        String filhoArg7 = String.format("%-" + 10 + "s", "");
-        String filhoArg8 = String.format("%-" + 10 + "s", "");
-        String filhoArg9 = String.format("%-" + 10 + "s", "");
-        String filhoArg10 = String.format("%-" + 10 + "s", "");
-        String filhoArg11 = String.format("%-" + 10 + "s", "");
-        String filhoArg12 = String.format("%-" + 10 + "s", "");
-        String filhoArg13 = String.format("%-" + 10 + "s", "");
-        String filhoArg14 = String.format("%-" + 10 + "s", "");
-        String filhoArg15 = String.format("%-" + 10 + "s", "");
-        String filhoArg16 = String.format("%-" + 10 + "s", "");
-        String filhoArg17 = String.format("%-" + 10 + "s", "");
-        String filhoArg18 = String.format("%-" + 10 + "s", "");
-        String filhoArg19 = String.format("%-" + 10 + "s", "");
-        String filhoArg20 = String.format("%-" + 10 + "s", "");
+        String pai = String.format("%-" + 10 + "s", Integer.toString(dirPai));
+        String filhosDir = String.format("%-" + 200 + "s", "");
+        String filhosArg = String.format("%-" + 200 + "s", "");
         String data = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
         String permissao = "777";
 
-        String resultado = estado + nome + pai + 
-                  filhoDir1 + filhoDir2 + filhoDir3 + filhoDir4 + filhoDir5 + 
-                  filhoDir6 + filhoDir7 + filhoDir8 + filhoDir9 + filhoDir10 + 
-                  filhoDir11 + filhoDir12 + filhoDir13 + filhoDir14 + filhoDir15 +
-                  filhoDir16 + filhoDir17 + filhoDir18 + filhoDir19 + filhoDir20 +
-                  filhoArg1 + filhoArg2 + filhoArg3 + filhoArg4 + filhoArg5 + 
-                  filhoArg6 + filhoArg7 + filhoArg8 + filhoArg9 + filhoArg10 + 
-                  filhoArg11 + filhoArg12 + filhoArg13 + filhoArg14 + filhoArg15 +
-                  filhoArg16 + filhoArg17 + filhoArg18 + filhoArg19 + filhoArg20 +
-                  data + permissao;
+        String resultado = estado + nome + pai + filhosDir + filhosArg + data + permissao;
 
-        
         return resultado;
     }
+
+    public static void desmembrarString(String resultado) {
+        String estado = resultado.substring(0, 1).replaceAll("\\s+", "");
+        String nome = resultado.substring(1, 87).replaceAll("\\s+", "");
+        String pai = resultado.substring(87, 97).replaceAll("\\s+", "");
+        
+        String[] filhosDir = new String[20];
+        for (int i = 0; i < 20; i++) {
+            filhosDir[i] = resultado.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "");
+        }
+    
+        String[] filhosArg = new String[20];
+        for (int i = 0; i < 20; i++) {
+            filhosArg[i] = resultado.substring(297 + i * 10, 307 + i * 10).replaceAll("\\s+", "");
+        }
+    
+        String data = resultado.substring(497, 509).replaceAll("\\s+", "");
+        String permissao = resultado.substring(509).replaceAll("\\s+", "");
+    
+        // Agora você tem as variáveis individuais desmembradas sem espaços em branco
+        System.out.println("Estado: " + estado);
+        System.out.println("Nome: " + nome);
+        System.out.println("Pai: " + pai);
+        for (int i = 0; i < 20; i++) {
+            System.out.println("FilhoDir" + (i + 1) + ": " + filhosDir[i]);
+        }
+        for (int i = 0; i < 20; i++) {
+            System.out.println("FilhoArg" + (i + 1) + ": " + filhosArg[i]);
+        }
+        System.out.println("Data: " + data);
+        System.out.println("Permissao: " + permissao);
+    }
+    
 
 }
