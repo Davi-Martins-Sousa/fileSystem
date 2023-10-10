@@ -95,13 +95,15 @@ public class MyKernel implements Kernel {
                         if(filhosPaiCoube == true){
                             escreverStringNoHardDisk(HD, criaDiretorio(parte, dirAtualTemporario), posicaoVazia);
                         }else{
-                            result = "Diretorio: "+encontraNomeDiretorio(dirAtualTemporario,HD)+" está cheio, ou já existe um arquivo com o mesmo nome!";
+                            result = "Diretorio: "+encontraNomeDiretorio(dirAtualTemporario,HD)+" está cheio!";
                             diretoriCheio = true;
                         }
                     }
                 }
             }
         }
+
+        desmembrarString(1, HD);
 
         //fim da implementacao do aluno
         return result;
@@ -351,15 +353,6 @@ public class MyKernel implements Kernel {
         String data = resultado.substring(497, 509);
         String permissao = resultado.substring(509);
 
-        for (int i = 0; i < 20; i++) {
-            String num = filhosDir[i].replaceAll("\\s+", "");
-            if(!num.equals("")){
-                if(encontraNomeDiretorio(Integer.parseInt(num), hd).equals(dirNome)){
-                    return false;
-                } 
-            }
-        }
-
         boolean encontrado = false;
         for (int i = 0; i < 20; i++) {
             if(filhosDir[i].replaceAll("\\s+", "").equals("") && encontrado == false){
@@ -417,17 +410,21 @@ public class MyKernel implements Kernel {
         
     public static int comparaNomesDiretorioFilhos(int dirNum, String nome, HardDisk hd) {
         String dir = lerStringDoHardDisk(hd, dirNum, 512);
-        String dirAux;
+        String[] filhosDir = new String[20];
+
         for (int i = 0; i < 20; i++) {
-            String num = dir.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "");
+            filhosDir[i] = dir.substring(97 + i * 10, 107 + i * 10);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            String num = filhosDir[i].replaceAll("\\s+", "");
             if(!num.equals("")){
-                System.out.println("Num"+num);
-                dirAux = lerStringDoHardDisk(hd,Integer.parseInt(num), 512);
-                if(nome == dirAux.substring(1, 87).replaceAll("\\s+", "")){
-                    return Integer.parseInt(dirAux);
-                }
+                if(encontraNomeDiretorio(Integer.parseInt(num), hd).equals(nome)){
+                    return Integer.parseInt(num);
+                } 
             }
         }
+
         return -1;
     }
 
