@@ -25,7 +25,7 @@ public class MyKernel implements Kernel {
     public MyKernel() {
         String dirRaiz = criaDiretorio("/", raiz);
         escreverStringNoHardDisk(HD, dirRaiz, raiz);
-        //desmembrarString(dirRaiz);
+        //desmembrarString(raiz, HD);
         //String lerRaiz = lerStringDoHardDisk(HD, 0, 512);
         //002System.out.println(lerRaiz);
     }
@@ -71,33 +71,33 @@ public class MyKernel implements Kernel {
             }
         }
 
+        int posicaoVazia = 0;
+        boolean diretoriCheio = false;
         if(result.equals("")){
             for (String parte : dirNomes) {
-                System.out.println("parte "+parte);
-                if(parte.equals(".")){
-                    System.out.println(".");
+                //System.out.println("parte "+parte);
+                if(parte.equals(".")||posicaoVazia == -1||diretoriCheio == true){
                 }else if(parte.equals("..")){
                     dirAtualTemporario = encontraDiretorioPai(dirAtualTemporario, HD);
                 }else{
                     int dirAux = comparaNomesDiretorioFilhos(dirAtualTemporario,parte,HD);
                     if(dirAux != -1){
                         dirAtualTemporario = dirAux;
+                        System.out.println("dir atual: "+dirAtualTemporario);
                     }else{
-                        int posicaoVazia = procuraPosicaoVaziaHD(HD);
-                        System.out.println(posicaoVazia);
+                        posicaoVazia = procuraPosicaoVaziaHD(HD);
+                        System.out.println("posição: "+posicaoVazia);
                         if(posicaoVazia == -1){
                             result = "HD está cheio!";
-                            break;
                         }
 
-                        boolean filhosPaiCoube = escreveDirFilhoNoPai(dirAtualTemporario, posicaoVazia, HD)
+                        boolean filhosPaiCoube = escreveDirFilhoNoPai(dirAtualTemporario, posicaoVazia, parte, HD);
                         if(filhosPaiCoube == true){
                             escreverStringNoHardDisk(HD, criaDiretorio(parte, dirAtualTemporario), posicaoVazia);
                         }else{
-                            result = "diretorio";// escrever o nome do diretorio que nao pode mais receber diretporios
+                            result = "Diretorio: "+encontraNomeDiretorio(dirAtualTemporario,HD)+" está cheio, ou já existe um arquivo com o mesmo nome!";
+                            diretoriCheio = true;
                         }
-                        
-                        
                     }
                 }
             }
@@ -294,11 +294,21 @@ public class MyKernel implements Kernel {
         return sb.toString();
     }
 
+    public static int procuraPosicaoVaziaHD(HardDisk hd){
+        for(int i = 0; i < 134217728; i++){
+            String info = lerStringDoHardDisk(hd,i,1);
+            if(!info.equals("d")&&!info.equals("a")){
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public static void escreverStringNoHardDisk(HardDisk hd, String texto, int posicao) {
         boolean[] bits = stringToBinaryArray(texto);
         
         for (int i = 0; i < bits.length; i++) {
-            hd.setBitDaPosicao(bits[i], posicao + i);
+            hd.setBitDaPosicao(bits[i], posicao*512*8 + i);
         }
     }
 
@@ -306,7 +316,7 @@ public class MyKernel implements Kernel {
         boolean[] bits = new boolean[tamanho * 8];
         
         for (int i = 0; i < bits.length; i++) {
-            bits[i] = hd.getBitDaPosicao(posicao + i);
+            bits[i] = hd.getBitDaPosicao(posicao*512*8 + i);
         }
         
         return binaryArrayToString(bits);
@@ -324,27 +334,36 @@ public class MyKernel implements Kernel {
         return estado + nome + pai + filhosDir + filhosArg + data + permissao;
     }
 
-    public static boolean escreveDirFilhoNoPai(int dir,int filho, HardDisk hd) {
+    public static boolean escreveDirFilhoNoPai(int dir,int filho, String dirNome, HardDisk hd) {
         String resultado = lerStringDoHardDisk(hd, dir, 512);
         
-        String estado = resultado.substring(0, 1).replaceAll("\\s+", "");
-        String nome = resultado.substring(1, 87).replaceAll("\\s+", "");
-        String pai = resultado.substring(87, 97).replaceAll("\\s+", "");
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai = resultado.substring(87, 97);
 
         String[] filhosDir = new String[20];
         for (int i = 0; i < 20; i++) {
-            filhosDir[i] = resultado.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "");
+            filhosDir[i] = resultado.substring(97 + i * 10, 107 + i * 10);
         }
 
-        String filhosArg = resultado.substring(297, 497).replaceAll("\\s+", "");
+        String filhosArg = resultado.substring(297, 497);
 
-        String data = resultado.substring(497, 509).replaceAll("\\s+", "");
-        String permissao = resultado.substring(509).replaceAll("\\s+", "");
+        String data = resultado.substring(497, 509);
+        String permissao = resultado.substring(509);
+
+        for (int i = 0; i < 20; i++) {
+            String num = filhosDir[i].replaceAll("\\s+", "");
+            if(!num.equals("")){
+                if(encontraNomeDiretorio(Integer.parseInt(num), hd).equals(dirNome)){
+                    return false;
+                } 
+            }
+        }
 
         boolean encontrado = false;
         for (int i = 0; i < 20; i++) {
-            if(filhosDir[i].equals("")&&encontrado == false){
-                filhosDir[i] =  filho + "";
+            if(filhosDir[i].replaceAll("\\s+", "").equals("") && encontrado == false){
+                filhosDir[i] = String.format("%-" + 10 + "s", Integer.toString(filho));
                 encontrado = true;
             } 
         }
@@ -358,7 +377,8 @@ public class MyKernel implements Kernel {
         }
     }
 
-    public static void desmembrarString(String resultado) {
+    public static void desmembrarString(int dirNum, HardDisk hd) {
+        String resultado = lerStringDoHardDisk(hd, dirNum, 512);
         String estado = resultado.substring(0, 1).replaceAll("\\s+", "");
         String nome = resultado.substring(1, 87).replaceAll("\\s+", "");
         String pai = resultado.substring(87, 97).replaceAll("\\s+", "");
@@ -395,12 +415,14 @@ public class MyKernel implements Kernel {
         return Integer.parseInt(resultado.substring(87, 97).replaceAll("\\s+", ""));
     }
         
-    public static int comparaNomesDiretorioFilhos(int diratual, String nome, HardDisk hd) {
-        String dir = lerStringDoHardDisk(hd, diratual, 512);
+    public static int comparaNomesDiretorioFilhos(int dirNum, String nome, HardDisk hd) {
+        String dir = lerStringDoHardDisk(hd, dirNum, 512);
         String dirAux;
         for (int i = 0; i < 20; i++) {
-            if(!dir.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "").equals("")){
-                dirAux = lerStringDoHardDisk(hd,Integer.parseInt(dir.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "")) , 512);
+            String num = dir.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "");
+            if(!num.equals("")){
+                System.out.println("Num"+num);
+                dirAux = lerStringDoHardDisk(hd,Integer.parseInt(num), 512);
                 if(nome == dirAux.substring(1, 87).replaceAll("\\s+", "")){
                     return Integer.parseInt(dirAux);
                 }
@@ -409,13 +431,9 @@ public class MyKernel implements Kernel {
         return -1;
     }
 
-    public static int procuraPosicaoVaziaHD(HardDisk hd){
-        for(int i = 0; i < 134217728; i++){
-            String info = lerStringDoHardDisk(hd,i,1);
-            if(!info.equals("d")&&!info.equals("a")){
-                return i;
-            }
-        }
-        return -1;
+    public static String encontraNomeDiretorio(int dirNum, HardDisk hd){
+        String dir = lerStringDoHardDisk(hd, dirNum, 512);
+        return dir.substring(1, 87).replaceAll("\\s+", "");
     }
+
 }
