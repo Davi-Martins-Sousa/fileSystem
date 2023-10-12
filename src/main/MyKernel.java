@@ -175,8 +175,20 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        int dirNum = encontraDiretorio(parameters, dirAtual,HD);
+
+        if( dirNum == -1){
+            result = "Caminho incorreto!";
+        }else{
+            dirAtual = dirNum;
+            while(dirNum!=0){
+                currentDir = encontraNomeDiretorio(dirNum,HD) + "/" + currentDir;
+                dirNum = encontraDiretorioPai(dirNum, HD);
+            }
+            currentDir = "/" + currentDir;   
+        }
+
         //indique o diretório atual. Por exemplo... /
-        currentDir = "/";
 
         //setando parte gráfica do diretorio atual
         operatingSystem.fileSystem.FileSytemSimulator.currentDir = currentDir;
