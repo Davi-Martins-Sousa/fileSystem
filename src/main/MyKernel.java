@@ -37,7 +37,64 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
-        System.out.println("ola pessoal!");
+        StringBuilder resultado = new StringBuilder();
+        String caminho = "";
+        String parametro = "";
+
+        if (!parameters.equals("")) {
+            if (parameters.equals("-l")) {
+                parametro = parameters;
+            } else if (parameters.startsWith("-l")) {
+                int firstSpaceIndex = parameters.indexOf(" ");
+                parametro = (firstSpaceIndex != -1) ? parameters.substring(0, firstSpaceIndex) : parameters;
+                caminho = (firstSpaceIndex != -1) ? parameters.substring(firstSpaceIndex + 1) : "";
+            } else {
+                caminho = parameters;
+            }
+        }
+
+        System.out.println("parametro: " + parametro);
+        System.out.println("caminho: " + caminho);
+
+        String[] filhosDir = new String[20];
+        String dir;
+        int dirNum = 0;
+
+        if(!caminho.equals("")){
+            dirNum = encontraDiretorio(caminho, dirAtual,HD);
+        }
+
+        if( dirNum == -1){
+            result = "Parametros incorretos!";
+        }else{
+
+            if (caminho.equals("")) {
+                dir = lerStringDoHardDisk(HD, dirAtual, 512);
+            }else{
+                dir = lerStringDoHardDisk(HD, dirNum, 512);
+            }
+            
+            for (int i = 0; i < 20; i++) {
+                filhosDir[i] = dir.substring(97 + i * 10, 107 + i * 10);
+            }
+
+            for (int i = 0; i < 20; i++) {
+                String num = filhosDir[i].replaceAll("\\s+", "");
+                if(!num.equals("")){
+                    if (parametro.equals("")){
+                        resultado.append(encontraNomeDiretorio(Integer.parseInt(num),HD)).append(" ");
+                    }else{
+                        resultado.append(encontraNomeDataPermisaoDiretorio(Integer.parseInt(num),HD)).append("\n");
+                    }
+                }
+            }
+
+            result = resultado.toString().trim();
+
+            if(result.equals("")){
+                result = "Diretório vazio!";
+            }
+        }
 
         //fim da implementacao do aluno
         return result;
@@ -94,6 +151,7 @@ public class MyKernel implements Kernel {
                         boolean filhosPaiCoube = escreveDirFilhoNoPai(dirAtualTemporario, posicaoVazia, parte, HD);
                         if(filhosPaiCoube == true){
                             escreverStringNoHardDisk(HD, criaDiretorio(parte, dirAtualTemporario), posicaoVazia);
+                            dirAtualTemporario = posicaoVazia;
                         }else{
                             result = "Diretorio: "+encontraNomeDiretorio(dirAtualTemporario,HD)+" está cheio!";
                             diretoriCheio = true;
@@ -103,7 +161,7 @@ public class MyKernel implements Kernel {
             }
         }
 
-        desmembrarString(1, HD);
+        //desmembrarString(0, HD);
 
         //fim da implementacao do aluno
         return result;
@@ -233,9 +291,9 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: sem parametros");
 
         //nome do aluno
-        String name = "Fulano da Silva";
+        String name = "Davi Martins de SOusa";
         //numero de matricula
-        String registration = "2001.xx.yy.00.11";
+        String registration = "2018.11.02.00.06";
         //versao do sistema de arquivos
         String version = "0.1";
 
@@ -433,4 +491,64 @@ public class MyKernel implements Kernel {
         return dir.substring(1, 87).replaceAll("\\s+", "");
     }
 
+    public static String encontraNomeDataPermisaoDiretorio(int dirNum, HardDisk hd){
+        String dir = lerStringDoHardDisk(hd, dirNum, 512);
+        String permissao = dir.substring(509).replaceAll("\\s+", "");
+        permissao = convertePermissao(permissao, dir.substring(0, 1).replaceAll("\\s+", ""));
+        String data = dir.substring(497, 509).replaceAll("\\s+", "");
+        data = data.substring(6, 8) + "/" + data.substring(4, 6) + "/" + data.substring(0, 4) + " " + data.substring(8, 10) + ":" + data.substring(10, 12);
+        String nome = dir.substring(1, 87).replaceAll("\\s+", "");
+        return permissao + "\t" + data + "\t" + nome;
+    }
+
+    public static String convertePermissao(String numericPermissions, String estado) {
+        if (numericPermissions.length() != 3) {
+            return "Permissão numérica inválida";
+        }
+
+        for (int i = 0; i < 3; i++) {
+            char numericChar = numericPermissions.charAt(i);
+            estado += (numericChar >= '4' ? 'r' : '-');
+            estado += (numericChar % 2 == 1 ? 'w' : '-');
+            estado += (numericChar % 2 == 1 ? 'x' : '-');
+        }
+
+        return estado;
+    }
+
+    public static int encontraDiretorio(String caminho, int dirAtual, HardDisk hd){
+        String[] caminhos = new String[0];
+
+        if(caminho.equals("/")){
+            System.out.println("parte do caminho: raiz");
+            System.out.println("diretorio encontrado: raiz");
+            return 0;
+        }if (caminho.startsWith("/")) {
+            caminho = caminho.replaceFirst("/", ""); // Remove o "/" do início da string caminho
+            dirAtual = 0;
+        }
+
+        caminhos= caminho.split("/");
+
+        for (String parte : caminhos) {
+            System.out.println("parte do caminho: " + parte);
+        }
+
+        for (String parte : caminhos) {
+            if (!parte.equals(".")) {
+                if(parte.equals("..")){
+                    dirAtual = encontraDiretorioPai(dirAtual, hd);
+                }else{
+                    dirAtual = comparaNomesDiretorioFilhos(dirAtual, parte, hd);
+                    if(dirAtual == -1){
+                        System.out.println("Caminho incorreto!");
+                        return -1;
+                    }
+                }
+            }
+        }
+
+        System.out.println("Diretorio encontrado: "+dirAtual+"");
+        return dirAtual;
+    }
 }
