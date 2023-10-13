@@ -56,7 +56,7 @@ public class MyKernel implements Kernel {
         System.out.println("parametro: " + parametro);
         System.out.println("caminho: " + caminho);
 
-        String[] filhosDir = new String[20];
+        String[] filhosDir = new String[40];
         String dir;
         int dirNum = 0;
 
@@ -74,11 +74,11 @@ public class MyKernel implements Kernel {
                 dir = lerStringDoHardDisk(HD, dirNum, 512);
             }
             
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 40; i++) {
                 filhosDir[i] = dir.substring(97 + i * 10, 107 + i * 10);
             }
 
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 40; i++) {
                 String num = filhosDir[i].replaceAll("\\s+", "");
                 if(!num.equals("")){
                     if (parametro.equals("")){
@@ -188,8 +188,6 @@ public class MyKernel implements Kernel {
             currentDir = "/" + currentDir;   
         }
 
-        //indique o diretório atual. Por exemplo... /
-
         //setando parte gráfica do diretorio atual
         operatingSystem.fileSystem.FileSytemSimulator.currentDir = currentDir;
 
@@ -204,6 +202,32 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        int dirNum = encontraDiretorio(parameters, dirAtual,HD);
+        String dir;
+        String[] filhosDir = new String[40];
+        boolean vazio = true;
+
+        if( dirNum == -1){
+            result = "Caminho incorreto!";
+        }else{
+            dir = lerStringDoHardDisk(HD, dirNum, 512);
+
+            for (int i = 0; i < 40; i++) {
+                filhosDir[i] = dir.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "");
+                if (!filhosDir[i].equals("") && vazio == true){
+                    vazio = false;
+                }
+            }
+
+            if (vazio == false){
+                result = "Diretório ainda possui filhos e não pode ser apagado pelo rmdir!";
+            }else{
+                apagaDiretorio(dirNum, HD);
+                result = "Diretório apagado!";
+            }
+
+        }
+
         //fim da implementacao do aluno
         return result;
     }
@@ -440,6 +464,34 @@ public class MyKernel implements Kernel {
         }
     }
 
+    public static void removeDirFilhoNoPai(int dir,int filho, HardDisk hd) {
+        String resultado = lerStringDoHardDisk(hd, dir, 512);
+        
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai = resultado.substring(87, 97);
+
+        String[] filhosDir = new String[20];
+        for (int i = 0; i < 20; i++) {
+            filhosDir[i] = resultado.substring(97 + i * 10, 107 + i * 10);
+        }
+
+        String filhosArg = resultado.substring(297, 497);
+
+        String data = resultado.substring(497, 509);
+        String permissao = resultado.substring(509);
+
+        for (int i = 0; i < 20; i++) {
+            if(filhosDir[i].replaceAll("\\s+", "").equals(filho+"")){
+                filhosDir[i] = String.format("%-" + 10 + "s", "");
+            } 
+        }
+
+        String dirNovo = estado + nome + pai + filhosDir[0] + filhosDir[1] + filhosDir[2] + filhosDir[3] + filhosDir[4] + filhosDir[5] + filhosDir[6] + filhosDir[7] + filhosDir[8] + filhosDir[9] + filhosDir[10] + filhosDir[11] + filhosDir[12] + filhosDir[13] + filhosDir[14] +  filhosDir[15] + filhosDir[16] + filhosDir[17] + filhosDir[18] + filhosDir[19] + filhosArg + data + permissao;
+        escreverStringNoHardDisk(hd, dirNovo , dir);
+
+    }
+
     public static void desmembrarString(int dirNum, HardDisk hd) {
         String resultado = lerStringDoHardDisk(hd, dirNum, 512);
         String estado = resultado.substring(0, 1).replaceAll("\\s+", "");
@@ -562,5 +614,12 @@ public class MyKernel implements Kernel {
 
         System.out.println("Diretorio encontrado: "+dirAtual+"");
         return dirAtual;
+    }
+
+    public static void apagaDiretorio (int dirNum,HardDisk hd){
+        String dir = String.format("%-" + 512 + "s", "");
+        int dirPai = encontraDiretorioPai(dirNum,hd);
+        removeDirFilhoNoPai(dirPai, dirNum, hd);
+        escreverStringNoHardDisk(hd, dir, dirNum);
     }
 }
