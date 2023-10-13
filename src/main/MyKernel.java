@@ -122,8 +122,8 @@ public class MyKernel implements Kernel {
 
         for (String parte : dirNomes) {
             if (!parte.equals(".") && !parte.equals("..")) {
-                if ((parte.contains(" ")) || (!parte.matches("^[A-Za-z0-9].*"))) {
-                    result = "Nome de diretório pode começar apenas com letras e números e não pode conter espaços!";
+                if ((parte.contains(" ")) || (!parte.matches("^[A-Za-z].*"))) {
+                    result = "Nome de diretório inválido!";
                 }
             }
         }
@@ -148,7 +148,7 @@ public class MyKernel implements Kernel {
                             result = "HD está cheio!";
                         }
 
-                        boolean filhosPaiCoube = escreveDirFilhoNoPai(dirAtualTemporario, posicaoVazia, parte, HD);
+                        boolean filhosPaiCoube = escreveDirFilhoNoPai(dirAtualTemporario, posicaoVazia, HD);
                         if(filhosPaiCoube == true){
                             escreverStringNoHardDisk(HD, criaDiretorio(parte, dirAtualTemporario), posicaoVazia);
                             dirAtualTemporario = posicaoVazia;
@@ -283,6 +283,59 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        String caminho = "";
+        String nome = "";
+        String caminho_Nome = "";
+        String conteudo = "";
+        String[] partes = parameters.split(" ", 2);
+
+        if (partes.length >= 2) {
+            caminho_Nome = partes[0];
+            conteudo = partes[1];
+        } else if (partes.length == 1) {
+            caminho_Nome = partes[0];
+            conteudo = "";
+        }
+
+        int lastIndex = caminho_Nome.lastIndexOf('/');
+        if (lastIndex >= 0 && lastIndex < caminho_Nome.length() - 1) {
+            caminho = caminho_Nome.substring(0, lastIndex);
+            nome = caminho_Nome.substring(lastIndex + 1);
+        } else {
+            nome = caminho_Nome;
+            caminho = ".";
+        }
+
+        System.out.println("Caminho: " + caminho);
+        System.out.println("Nome: " + nome);
+        System.out.println("Conteudo: "+conteudo);
+
+        int dirPai = encontraDiretorio(caminho,dirAtual , HD);
+        if(dirPai == -1){
+            result = "Caminho incorreto!";
+        }else if ((nome.contains(" ")) || (!nome.matches("^[A-Za-z].*"))) {
+            result = "Nome de arquivos inválido!";
+        }else{
+
+            int nomeIgual = -1;
+            nomeIgual = comparaNomesArquivosFilhos(dirPai,nome+".txt",HD);
+            if(nomeIgual != -1){
+                result = "Já existe um arquivo com este nome! ";
+            }else{
+                int posicaoVazia = procuraPosicaoVaziaHD(HD);
+                System.out.println("posição: "+posicaoVazia);
+                if(posicaoVazia == -1){
+                    result = "HD está cheio!";
+                }else{
+                    boolean filhosPaiCoube = escreveArgFilhoNoPai(dirPai, posicaoVazia, HD);
+                    if(filhosPaiCoube == true){
+                        escreverStringNoHardDisk(HD, criaArquivo(nome+".txt",conteudo,dirPai), posicaoVazia);
+                    }else{
+                        result = "Diretorio: "+encontraNomeDiretorio(dirPai,HD)+" está cheio!";
+                    }
+                }
+            }
+        }
         //fim da implementacao do aluno
         return result;
     }
@@ -327,7 +380,7 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: sem parametros");
 
         //nome do aluno
-        String name = "Davi Martins de SOusa";
+        String name = "Davi Martins de Sousa";
         //numero de matricula
         String registration = "2018.11.02.00.06";
         //versao do sistema de arquivos
@@ -430,7 +483,18 @@ public class MyKernel implements Kernel {
         return estado + nome + pai + filhosDir + filhosArg + data + permissao;
     }
 
-    public static boolean escreveDirFilhoNoPai(int dir,int filho, String dirNome, HardDisk hd) {
+    public static String criaArquivo(String nome, String conteudo, int dirPai) {
+        String estado = "a";
+        nome = String.format("%-" + 86 + "s", nome);
+        String pai = String.format("%-" + 10 + "s", Integer.toString(dirPai));
+        conteudo = String.format("%-" + 400 + "s", conteudo);
+        String data = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+        String permissao = "777";
+
+        return estado + nome + pai + conteudo + data + permissao;
+    }
+
+    public static boolean escreveDirFilhoNoPai(int dir,int filho, HardDisk hd) {
         String resultado = lerStringDoHardDisk(hd, dir, 512);
         
         String estado = resultado.substring(0, 1);
@@ -456,7 +520,11 @@ public class MyKernel implements Kernel {
         }
         
         if(encontrado == true){
-            String dirNovo = estado + nome + pai + filhosDir[0] + filhosDir[1] + filhosDir[2] + filhosDir[3] + filhosDir[4] + filhosDir[5] + filhosDir[6] + filhosDir[7] + filhosDir[8] + filhosDir[9] + filhosDir[10] + filhosDir[11] + filhosDir[12] + filhosDir[13] + filhosDir[14] +  filhosDir[15] + filhosDir[16] + filhosDir[17] + filhosDir[18] + filhosDir[19] + filhosArg + data + permissao;
+            String dirNovo = estado + nome + pai;
+            for (int i = 0; i < 20; i++) {
+                dirNovo += filhosDir[i];
+            }
+            dirNovo += filhosArg+ data + permissao;
             escreverStringNoHardDisk(hd, dirNovo , dir);
             return true;
         }else {
@@ -464,30 +532,70 @@ public class MyKernel implements Kernel {
         }
     }
 
-    public static void removeDirFilhoNoPai(int dir,int filho, HardDisk hd) {
+    public static boolean escreveArgFilhoNoPai(int dir,int filho, HardDisk hd) {
+        String resultado = lerStringDoHardDisk(hd, dir, 512);
+        
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai = resultado.substring(87, 97);
+        String filhosDir = resultado.substring(97, 297);
+
+        String[] filhosArg = new String[20];
+        for (int i = 0; i < 20; i++) {
+            filhosArg[i] = resultado.substring(297 + i * 10, 307 + i * 10);
+        }
+
+        String data = resultado.substring(497, 509);
+        String permissao = resultado.substring(509);
+
+        boolean encontrado = false;
+        for (int i = 0; i < 20; i++) {
+            if(filhosArg[i].replaceAll("\\s+", "").equals("") && encontrado == false){
+                filhosArg[i] = String.format("%-" + 10 + "s", Integer.toString(filho));
+                encontrado = true;
+            } 
+        }
+        
+        if(encontrado == true){
+            String dirNovo = estado + nome + pai + filhosDir;
+            for (int i = 0; i < 20; i++) {
+                dirNovo += filhosArg[i];
+            }
+            dirNovo +=  data + permissao;
+            escreverStringNoHardDisk(hd, dirNovo , dir);
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    public static void removeFilhoDoPai(int dir,int filho, HardDisk hd) {
         String resultado = lerStringDoHardDisk(hd, dir, 512);
         
         String estado = resultado.substring(0, 1);
         String nome = resultado.substring(1, 87);
         String pai = resultado.substring(87, 97);
 
-        String[] filhosDir = new String[20];
-        for (int i = 0; i < 20; i++) {
-            filhosDir[i] = resultado.substring(97 + i * 10, 107 + i * 10);
+        String[] filhos = new String[40];
+        for (int i = 0; i < 40; i++) {
+            filhos[i] = resultado.substring(97 + i * 10, 107 + i * 10);
         }
 
-        String filhosArg = resultado.substring(297, 497);
 
         String data = resultado.substring(497, 509);
         String permissao = resultado.substring(509);
 
-        for (int i = 0; i < 20; i++) {
-            if(filhosDir[i].replaceAll("\\s+", "").equals(filho+"")){
-                filhosDir[i] = String.format("%-" + 10 + "s", "");
+        for (int i = 0; i < 40; i++) {
+            if(filhos[i].replaceAll("\\s+", "").equals(filho+"")){
+                filhos[i] = String.format("%-" + 10 + "s", "");
             } 
         }
 
-        String dirNovo = estado + nome + pai + filhosDir[0] + filhosDir[1] + filhosDir[2] + filhosDir[3] + filhosDir[4] + filhosDir[5] + filhosDir[6] + filhosDir[7] + filhosDir[8] + filhosDir[9] + filhosDir[10] + filhosDir[11] + filhosDir[12] + filhosDir[13] + filhosDir[14] +  filhosDir[15] + filhosDir[16] + filhosDir[17] + filhosDir[18] + filhosDir[19] + filhosArg + data + permissao;
+        String dirNovo = estado + nome + pai;
+        for (int i = 0; i < 40; i++) {
+            dirNovo += filhos[i];
+        }
+        dirNovo += data + permissao;
         escreverStringNoHardDisk(hd, dirNovo , dir);
 
     }
@@ -540,6 +648,26 @@ public class MyKernel implements Kernel {
 
         for (int i = 0; i < 20; i++) {
             String num = filhosDir[i].replaceAll("\\s+", "");
+            if(!num.equals("")){
+                if(encontraNomeDiretorio(Integer.parseInt(num), hd).equals(nome)){
+                    return Integer.parseInt(num);
+                } 
+            }
+        }
+
+        return -1;
+    }
+
+    public static int comparaNomesArquivosFilhos(int dirNum, String nome, HardDisk hd) {
+        String dir = lerStringDoHardDisk(hd, dirNum, 512);
+        String[] filhosArg = new String[20];
+
+        for (int i = 0; i < 20; i++) {
+            filhosArg[i] = dir.substring(297 + i * 10, 307 + i * 10);
+        }
+
+        for (int i = 0; i < 20; i++) {
+            String num = filhosArg[i].replaceAll("\\s+", "");
             if(!num.equals("")){
                 if(encontraNomeDiretorio(Integer.parseInt(num), hd).equals(nome)){
                     return Integer.parseInt(num);
@@ -619,7 +747,7 @@ public class MyKernel implements Kernel {
     public static void apagaDiretorio (int dirNum,HardDisk hd){
         String dir = String.format("%-" + 512 + "s", "");
         int dirPai = encontraDiretorioPai(dirNum,hd);
-        removeDirFilhoNoPai(dirPai, dirNum, hd);
+        removeFilhoDoPai(dirPai, dirNum, hd);
         escreverStringNoHardDisk(hd, dir, dirNum);
     }
 }
