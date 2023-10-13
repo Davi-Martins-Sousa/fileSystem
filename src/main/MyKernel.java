@@ -347,6 +347,35 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        String caminho;
+        String nome;
+        int lastIndex = parameters.lastIndexOf('/');
+
+        if (lastIndex >= 0 && lastIndex < parameters.length() - 1) {
+            caminho = parameters.substring(0, lastIndex);
+            nome = parameters.substring(lastIndex + 1);
+        } else {
+            nome = parameters;
+            caminho = ".";
+        }
+
+        System.out.println("Caminho: " + caminho);
+        System.out.println("Nome: " + nome);
+
+        int dirPai = encontraDiretorio(caminho,dirAtual , HD);
+        int argNum = -1;
+        argNum = comparaNomesArquivosFilhos(dirPai,nome+".txt",HD);
+        if(dirPai == -1 || argNum == -1){
+            result = "Caminho incorreto!";
+        }else{
+            String arg = lerStringDoHardDisk(HD, argNum, 512);
+            result = arg.substring(97, 497).replaceAll("\\s+$", "");
+        }
+
+        if(result.equals("")){
+            result = "Arquivo vazio!";
+        }
+
         //fim da implementacao do aluno
         return result;
     }
