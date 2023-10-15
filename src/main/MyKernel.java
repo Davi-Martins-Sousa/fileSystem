@@ -8,7 +8,9 @@ import hardware.HardDisk;
  */
 import operatingSystem.Kernel;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Kernel desenvolvido pelo aluno. Outras classes criadas pelo aluno podem ser
@@ -601,6 +603,75 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        int arg = encontraDiretorio(parameters, dirAtual, HD);
+
+        if(arg != -1){
+            String resultado = lerStringDoHardDisk(HD, arg, 512);
+            String estado = resultado.substring(0, 1).replaceAll("\\s+", "");
+            if(estado.equals("d")){
+                result = "Caminho incorreto!";
+            }
+        }else{
+            result = "Caminho incorreto!";
+        }
+
+        if(result.equals("")){
+            String resultado = lerStringDoHardDisk(HD, arg, 512);
+            String conteudo = resultado.substring(97, 497).replaceAll("\\s+$", "");
+            String comando, parametros;
+
+            String[] arrayDeStrings = conteudo.split("\n");
+            List<String> config = Arrays.asList(arrayDeStrings);
+
+            for (String linha : config) {
+                System.out.println(linha);
+            }
+
+            for (int i = 0; i < config.size(); i++) {
+                comando = config.get(i).substring(0, config.get(i).indexOf(" "));
+                parametros = config.get(i).substring(config.get(i).indexOf(" ") + 1);
+
+                if (comando.equals("ls")) {
+                    ls(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("mkdir")) {
+                    mkdir(parametros);
+                    result = "Comandos Executados2.";
+                } else if (comando.equals("cd")) {
+                    cd(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("rmdir")) {
+                    rmdir(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("cp")) {
+                    cp(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("mv")) {
+                    mv(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("rm")) {
+                    rm(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("chmod")) {
+                    chmod(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("createfile")) {
+                    createfile(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("cat")) {
+                    cat(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("batch")) {
+                    batch(parametros);
+                    result = "Comandos Executados.";
+                } else if (comando.equals("dump")) {
+                    dump(parametros);
+                    result = "Comandos Executados.";
+                }
+            }
+        }
+
+        
         //fim da implementacao do aluno
         return result;
     }
