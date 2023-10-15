@@ -360,6 +360,46 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        String[] parte = parameters.split(" ");
+        String caminho = "";
+        String permissao = "";
+        String parametro = "";
+        int dir = -1;
+
+        if(parte.length == 2){
+            permissao = parte[0];
+            caminho = parte[1];
+        }else if( parte.length == 3){
+            parametro = parte[0];
+            permissao = parte[1];
+            caminho = parte[2];
+        }else{
+            result = "Parametros inválidos!";
+        }
+
+        dir = encontraDiretorio(caminho, dirAtual, HD);
+
+        if (result.equals("")){
+            if(!parametro.equals("") && !parametro.equals("-r")){
+                result = "Parametro inválido!";
+            }if (!permissao.matches("\\d{3}$")){
+               result = "Permissão inválida!";
+            }if(dir == -1){
+                result = "Caminho inválido!";
+            }
+        }
+
+        if (result.equals("")){
+            if(parametro.equals("")){
+                trocaPermissao(dir,permissao,HD);
+            }else{
+                trocaPermissaoRecursivamente(dir,permissao,HD);
+            }
+        }
+
+        System.out.println("caminho: " + caminho);
+        System.out.println("permissao: " + permissao);
+        System.out.println("parametro: " + parametro);
         //fim da implementacao do aluno
         return result;
     }
@@ -709,6 +749,50 @@ public class MyKernel implements Kernel {
         escreverStringNoHardDisk(hd, dirNovo , dir);
     }
 
+    public static void trocaPermissao(int dir,String permissao, HardDisk hd){
+        String resultado = lerStringDoHardDisk(hd, dir, 512);
+        String restante = resultado.substring(0,509);
+
+        String dirNovo = restante + permissao;
+        escreverStringNoHardDisk(hd, dirNovo , dir);
+    }
+
+     public static void trocaPermissaoRecursivamente(int dir,String permissao, HardDisk hd){
+        String resultado = lerStringDoHardDisk(hd, dir, 512);
+        
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai = resultado.substring(87, 97);
+
+        String[] filhos = new String[40];
+        String conteudo = "";
+
+        if(estado.equals("a")){
+            conteudo =  resultado.substring(97, 497);
+        }else if(estado.equals("d")){
+            for (int i = 0; i < 40; i++) {
+                filhos[i] = resultado.substring(97 + i * 10, 107 + i * 10);
+                if(!filhos[i].replaceAll("\\s+", "").equals("")){
+                    trocaPermissaoRecursivamente(Integer.parseInt(filhos[i].replaceAll("\\s+", "")),permissao,hd);
+                }
+            }
+        }
+        
+        String data = resultado.substring(497, 509);
+
+        if(estado.equals("a")){
+            String dirNovo = estado + nome + pai + conteudo + data + permissao;
+            escreverStringNoHardDisk(hd, dirNovo , dir);
+        }else if(estado.equals("d")){
+            String dirNovo = estado + nome + pai;
+            for (int i = 0; i < 40; i++) {
+                dirNovo += filhos[i];
+            }
+            dirNovo +=  data + permissao;
+            escreverStringNoHardDisk(hd, dirNovo , dir);
+        }
+    }
+
     public static void removeFilhoDoPai(int dir,int filho, HardDisk hd) {
         String resultado = lerStringDoHardDisk(hd, dir, 512);
         
@@ -862,19 +946,29 @@ public class MyKernel implements Kernel {
 
         caminhos= caminho.split("/");
 
-        for (String parte : caminhos) {
+        //for (String parte : caminhos) {
             //System.out.println("parte do caminho: " + parte);
-        }
+        //}
 
-        for (String parte : caminhos) {
+        for (int i = 0; i < caminhos.length; i++) {
+            String parte = caminhos[i];
             if (!parte.equals(".")) {
                 if(parte.equals("..")){
                     dirAtual = encontraDiretorioPai(dirAtual, hd);
                 }else{
+                    int dirAnt = dirAtual;
                     dirAtual = comparaNomesDiretorioFilhos(dirAtual, parte, hd);
                     if(dirAtual == -1){
-                        System.out.println("Caminho incorreto!");
-                        return -1;
+                        if (i == caminhos.length - 1){
+                            dirAtual = comparaNomesArquivosFilhos(dirAnt, parte, hd);
+                            if(dirAtual == -1){
+                                System.out.println("Caminho incorreto!");
+                                return -1;
+                            }
+                        }else{
+                            System.out.println("Caminho incorreto!");
+                            return -1;
+                        }    
                     }
                 }
             }
@@ -890,4 +984,5 @@ public class MyKernel implements Kernel {
         removeFilhoDoPai(dirPai, dirNum, hd);
         escreverStringNoHardDisk(hd, dir, dirNum);
     }
+
 }
