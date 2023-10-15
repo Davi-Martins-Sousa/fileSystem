@@ -1135,7 +1135,59 @@ public class MyKernel implements Kernel {
         }
     }
 
-    public static String copiaDiretorioRecursivamente (int dirOrigem, int dirDestino ,HardDisk hd){
-        return "";
+    public static String copiaDiretorioRecursivamente (int origem, int destino ,HardDisk hd){
+        String dirOrigem = lerStringDoHardDisk(hd, origem, 512);
+        String estadoOrigem = dirOrigem.substring(0, 1).replaceAll("\\s+", "");
+        String nomeOrigem = dirOrigem.substring(1, 87).replaceAll("\\s+", "");
+
+        int dirAux = comparaNomesDiretorioFilhos(destino,nomeOrigem,hd);
+        if(dirAux != -1){
+            return "Nome já presente nos diretórios!";
+        }
+
+        dirAux = comparaNomesArquivosFilhos(destino,nomeOrigem,hd);
+        if(dirAux != -1){
+            return "Nome já presente nos arquivos!";
+        }
+
+        int posicaoVazia = procuraPosicaoVaziaHD(hd);
+        if(posicaoVazia == -1){
+            return "HD está cheio!";
+        }
+
+        boolean filhosPaiCoube = escreveDirFilhoNoPai(destino, posicaoVazia, hd);
+        if(filhosPaiCoube == true){
+            if(estadoOrigem.equals("a")){
+                String estado = dirOrigem.substring(0, 1);
+                String nome =  dirOrigem.substring(1, 87);
+                String pai = String.format("%-" + 10 + "s", Integer.toString(destino));
+                String conteudo = dirOrigem.substring(97, 497);
+                String data = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+                String permissao = dirOrigem.substring(509);
+                String dir = estado + nome + pai + conteudo + data + permissao;
+                escreverStringNoHardDisk(hd, dir, posicaoVazia);
+                return "Arquivo copiado!";
+            }else{ // if(estadoOrigem.equals("d"))
+                String estado = dirOrigem.substring(0, 1);
+                String nome =  dirOrigem.substring(1, 87);
+                String pai = String.format("%-" + 10 + "s", Integer.toString(destino));
+                String filhos = String.format("%-" + 400 + "s", "");
+                String data = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+                String permissao = dirOrigem.substring(509);
+                String dir = estado + nome + pai + filhos + data + permissao;
+                escreverStringNoHardDisk(hd, dir, posicaoVazia);
+                
+                String[] filhosOrigem = new String[40];
+                for (int i = 0; i < 40; i++) {
+                    filhosOrigem[i] = dirOrigem.substring(97 + i * 10, 107 + i * 10);
+                    if(!filhosOrigem[i].replaceAll("\\s+", "").equals("")){
+                        copiaDiretorioRecursivamente(Integer.parseInt(filhosOrigem[i].replaceAll("\\s+", "")),posicaoVazia, hd);
+                    }
+                }
+                return "Diretório copiado!";
+            }
+        }else{
+            return "Diretorio destino cheio!";
+        }
     }
 }
