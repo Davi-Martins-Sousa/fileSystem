@@ -349,6 +349,47 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        String[] parte = parameters.split(" ");
+        String caminho = "";
+        String parametro = "";
+
+        if(parte.length == 1){
+            caminho = parte[0];
+        }else if( parte.length == 2){
+            parametro = parte[0];
+            caminho = parte[1];
+        }else{
+            result = "Parametros inválidos!";
+        }
+
+        int dir = encontraDiretorio(caminho, dirAtual, HD);
+
+        if (result.equals("")){
+            if(!parametro.equals("") && !parametro.equals("-r")){
+                result = "Parametro inválido!";
+            }if(dir == -1){
+                result = "Caminho inválido!";
+            }
+        }
+
+        String resultado = lerStringDoHardDisk(HD, dir, 512);
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87).replaceAll("\\s+", "");
+
+        if (result.equals("")){
+            if(estado.equals("a") && parametro.equals("")){
+                apagaDiretorio(dir, HD);
+                result = nome +  " removido!";
+            }else if(estado.equals("d") &&parametro.equals("-r")){
+                apagaDiretorioRecursivamente (dir, HD);
+                result = nome +  " e seus filhos removidos!";
+            }else if(estado.equals("a") &&parametro.equals("-r")){
+                result = nome +  " é um arquivo, retire -r para apaga-lo!";
+            }else if(estado.equals("d") &&parametro.equals("")){
+                result = nome +  " é um diretorio, nada foi removido!";
+            }
+        }
+
         //fim da implementacao do aluno
         return result;
     }
@@ -397,9 +438,6 @@ public class MyKernel implements Kernel {
             }
         }
 
-        System.out.println("caminho: " + caminho);
-        System.out.println("permissao: " + permissao);
-        System.out.println("parametro: " + parametro);
         //fim da implementacao do aluno
         return result;
     }
@@ -757,7 +795,7 @@ public class MyKernel implements Kernel {
         escreverStringNoHardDisk(hd, dirNovo , dir);
     }
 
-     public static void trocaPermissaoRecursivamente(int dir,String permissao, HardDisk hd){
+    public static void trocaPermissaoRecursivamente(int dir,String permissao, HardDisk hd){
         String resultado = lerStringDoHardDisk(hd, dir, 512);
         
         String estado = resultado.substring(0, 1);
@@ -979,6 +1017,22 @@ public class MyKernel implements Kernel {
     }
 
     public static void apagaDiretorio (int dirNum,HardDisk hd){
+        String dir = String.format("%-" + 512 + "s", "");
+        int dirPai = encontraDiretorioPai(dirNum,hd);
+        removeFilhoDoPai(dirPai, dirNum, hd);
+        escreverStringNoHardDisk(hd, dir, dirNum);
+    }
+
+    public static void apagaDiretorioRecursivamente (int dirNum,HardDisk hd){
+        String resultado = lerStringDoHardDisk(hd, dirNum, 512);
+
+        String[] filhos = new String[40];
+        for (int i = 0; i < 40; i++) {
+            filhos[i] = resultado.substring(97 + i * 10, 107 + i * 10);
+            if(!filhos[i].replaceAll("\\s+", "").equals("")){
+                apagaDiretorioRecursivamente(Integer.parseInt(filhos[i].replaceAll("\\s+", "")),hd);
+            }
+        }
         String dir = String.format("%-" + 512 + "s", "");
         int dirPai = encontraDiretorioPai(dirNum,hd);
         removeFilhoDoPai(dirPai, dirNum, hd);
