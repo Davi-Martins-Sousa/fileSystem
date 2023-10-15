@@ -633,40 +633,40 @@ public class MyKernel implements Kernel {
 
                 if (comando.equals("ls")) {
                     ls(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: ls.";
                 } else if (comando.equals("mkdir")) {
                     mkdir(parametros);
-                    result = "Comandos Executados2.";
+                    result = "Comando executado: mkdir.";
                 } else if (comando.equals("cd")) {
                     cd(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: cd.";
                 } else if (comando.equals("rmdir")) {
                     rmdir(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: rmdir.";
                 } else if (comando.equals("cp")) {
                     cp(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: cp.";
                 } else if (comando.equals("mv")) {
                     mv(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: mv.";
                 } else if (comando.equals("rm")) {
                     rm(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: rm.";
                 } else if (comando.equals("chmod")) {
                     chmod(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: chmod.";
                 } else if (comando.equals("createfile")) {
                     createfile(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: createfile.";
                 } else if (comando.equals("cat")) {
                     cat(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: cat.";
                 } else if (comando.equals("batch")) {
                     batch(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: batch.";
                 } else if (comando.equals("dump")) {
                     dump(parametros);
-                    result = "Comandos Executados.";
+                    result = "Comando executado: dump.";
                 }
             }
         }
