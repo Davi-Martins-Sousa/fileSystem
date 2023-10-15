@@ -27,7 +27,7 @@ public class MyKernel implements Kernel {
         escreverStringNoHardDisk(HD, dirRaiz, raiz);
         //desmembrarString(raiz, HD);
         //String lerRaiz = lerStringDoHardDisk(HD, 0, 512);
-        //002System.out.println(lerRaiz);
+        //System.out.println(lerRaiz);
     }
 
     public String ls(String parameters) {
@@ -250,6 +250,94 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        String[] partes = parameters.split(" ", 2);
+        String origem = "";
+        String destino = "";
+        String origemPai;
+        String destinoPai;
+        String origemNome;
+        String destinoNome;
+
+        if (partes.length == 2) {
+            origem = partes[0];
+            destino = partes[1];
+        }else{
+            result = "Parametros incorretos!";
+        }
+
+
+        if(result.equals("")){
+            int lastIndex = origem.lastIndexOf('/');
+            if (lastIndex >= 0 && lastIndex < origem.length() - 1) {
+                origemPai = origem.substring(0, lastIndex);
+                if(origemPai.equals("")){
+                    origemPai = "/";
+                }
+                origemNome = origem.substring(lastIndex + 1);
+            } else {
+                origemNome = origem;
+                origemPai = ".";
+            }
+
+            lastIndex = destino.lastIndexOf('/');
+            if (lastIndex >= 0 && lastIndex < destino.length() - 1) {
+                destinoPai = destino.substring(0, lastIndex);
+                if(destinoPai.equals("")){
+                    destinoPai = "/";
+                }
+                destinoNome = destino.substring(lastIndex + 1);
+            } else {
+                destinoNome = destino;
+                destinoPai = ".";
+            }
+
+            System.out.println("origem nome "+origemNome);
+            System.out.println("origem pai "+origemPai);
+            System.out.println("destino nome "+destinoNome);
+            System.out.println("destino pai "+destinoPai);
+
+            int origemNum = encontraDiretorio(origem, dirAtual, HD);
+            int destinoNum = encontraDiretorio(destino, dirAtual, HD);
+            int origemPaiNum = encontraDiretorio(origemPai, dirAtual, HD);
+            int destinoPaiNum = encontraDiretorio(destinoPai, dirAtual, HD);
+
+            int arqNum = -1;
+            if(origemPaiNum != -1){
+                arqNum = comparaNomesArquivosFilhos(origemPaiNum,origemNome,HD);
+            }
+
+            System.out.println("origemNum: " + origemNum);
+            System.out.println("destinoNum: " + destinoNum);
+            System.out.println("origemPaiNum: " + origemPaiNum);
+            System.out.println("destinoPaiNum: " + destinoPaiNum);
+            System.out.println("arqNum: " + arqNum);
+            
+
+            if(origemNum != -1 && destinoNum != -1){
+                boolean filhosPaiCoube = escreveDirFilhoNoPai(destinoNum, origemNum, HD);
+                if(filhosPaiCoube == true){
+                    removeFilhoDoPai(origemPaiNum,origemNum, HD);
+                    trocaPai(origemNum, destinoNum, HD);
+                }else{
+                    result = "Diretorio: "+encontraNomeDiretorio(destinoNum,HD)+" está cheio!";
+                }
+            }else if(origemNum != -1 && destinoNum == -1 &&  origemPaiNum == destinoPaiNum && destinoPaiNum!= -1){
+                trocaNome(origemNum, destinoNome, HD);
+            }else if(arqNum != -1  && destinoNum != -1){
+                boolean filhosPaiCoube = escreveArgFilhoNoPai(destinoNum, arqNum, HD);
+                if(filhosPaiCoube == true){
+                    removeFilhoDoPai(origemPaiNum,arqNum, HD);
+                    trocaPai(arqNum, destinoNum, HD);
+                }else{
+                    result = "Diretorio: "+encontraNomeDiretorio(destinoNum,HD)+" está cheio!";
+                }
+            }else if(arqNum != -1  && destinoNum == -1 &&  origemPaiNum == destinoPaiNum && destinoPaiNum!= -1){
+                trocaNome(arqNum, destinoNome+".txt", HD);
+            }else{
+                result = "Caminhos incorretos!";
+            }
+
+        }
         //fim da implementacao do aluno
         return result;
     }
@@ -598,6 +686,29 @@ public class MyKernel implements Kernel {
         }
     }
 
+    public static void trocaPai(int dir,int paiNum, HardDisk hd) {
+        String resultado = lerStringDoHardDisk(hd, dir, 512);
+        
+        String estado = resultado.substring(0, 1);
+        String nome = resultado.substring(1, 87);
+        String pai =  String.format("%-" + 10 + "s", Integer.toString(paiNum));
+        String restante = resultado.substring(97, 512);
+        
+        String dirNovo = estado + nome + pai + restante;
+        escreverStringNoHardDisk(hd, dirNovo , dir);
+    }
+
+    public static void trocaNome(int dir,String nome, HardDisk hd) {
+        String resultado = lerStringDoHardDisk(hd, dir, 512);
+        
+        String estado = resultado.substring(0, 1);
+        nome = String.format("%-" + 86 + "s", nome);
+        String restante = resultado.substring(87, 512);
+        
+        String dirNovo = estado + nome + restante;
+        escreverStringNoHardDisk(hd, dirNovo , dir);
+    }
+
     public static void removeFilhoDoPai(int dir,int filho, HardDisk hd) {
         String resultado = lerStringDoHardDisk(hd, dir, 512);
         
@@ -741,8 +852,8 @@ public class MyKernel implements Kernel {
         String[] caminhos = new String[0];
 
         if(caminho.equals("/")){
-            System.out.println("parte do caminho: raiz");
-            System.out.println("diretorio encontrado: raiz");
+            //System.out.println("parte do caminho: raiz");
+            //System.out.println("diretorio encontrado: raiz");
             return 0;
         }if (caminho.startsWith("/")) {
             caminho = caminho.replaceFirst("/", ""); // Remove o "/" do início da string caminho
@@ -752,7 +863,7 @@ public class MyKernel implements Kernel {
         caminhos= caminho.split("/");
 
         for (String parte : caminhos) {
-            System.out.println("parte do caminho: " + parte);
+            //System.out.println("parte do caminho: " + parte);
         }
 
         for (String parte : caminhos) {
@@ -769,7 +880,7 @@ public class MyKernel implements Kernel {
             }
         }
 
-        System.out.println("Diretorio encontrado: "+dirAtual+"");
+        //System.out.println("Diretorio encontrado: "+dirAtual+"");
         return dirAtual;
     }
 
