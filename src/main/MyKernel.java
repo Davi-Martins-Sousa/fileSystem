@@ -683,6 +683,41 @@ public class MyKernel implements Kernel {
         System.out.println("\tParametros: " + parameters);
 
         //inicio da implementacao do aluno
+        int arg = encontraDiretorio(parameters, dirAtual, HD);
+        if(arg == -1){
+            result = "Caminho incorreto!";
+        }else{
+            String resultado = lerStringDoHardDisk(HD, arg, 512);
+            String estado = resultado.substring(0, 1).replaceAll("\\s+", "");
+            String conteudo = resultado.substring(97, 497).replaceAll("\\s+$", "");
+            if(estado.equals("d")){
+                result = "Isto não é um arquivo!";
+            }else if(!conteudo.equals("")){
+                result = "Arquivo já possui conteúdo!";
+            }
+        }
+
+        if(result.equals("")){
+            String dump = reescreveEstruturaDoHd(0, "", HD);
+            dump = dump.substring(0, dump.length() - 1);
+
+            if(dump.length() <= 400){
+                String resultado = lerStringDoHardDisk(HD, arg, 512);
+                String estado = resultado.substring(0, 1);
+                String nome = resultado.substring(1, 87);
+                String pai = resultado.substring(87, 97);
+                String conteudo = String.format("%-" + 400 + "s", dump);
+                String data = resultado.substring(497, 509);
+                String permissao = resultado.substring(509);
+
+                resultado = estado + nome + pai + conteudo + data + permissao;
+                escreverStringNoHardDisk(HD, resultado, arg);
+                result = "Dump criado com sucesso!";
+            }else{
+                result = "A estrutura de arquivos não coube 400 caracteres!";
+            }
+            
+        }
         //fim da implementacao do aluno
         return result;
     }
@@ -1260,5 +1295,69 @@ public class MyKernel implements Kernel {
         }else{
             return "Diretorio destino cheio!";
         }
+    }
+
+    public static String reescreveEstruturaDoHd (int dirNum, String dump,HardDisk hd){
+        String dir = lerStringDoHardDisk(hd, dirNum, 512);
+        String estado = dir.substring(0, 1).replaceAll("\\s+", "");
+        String[] filhosDir = new String[20];
+        String[] filhosArg = new String[20];
+        String conteudo = "";
+
+        if(estado.equals("a")){
+            String ancestralidade = nomesAncestralidade(dirNum, "", hd);
+            ancestralidade = ancestralidade.substring(0, ancestralidade.length() - 5);
+            conteudo = dir.substring(97, 497).replaceAll("\\s+$", "");
+            dump = dump + "createfile " + ancestralidade +  " " + conteudo + "\n";
+            System.out.println(dump);
+        }else if(estado.equals("d")){
+            boolean todosVazios = true;
+            for (int i = 0; i < 20; i++) {
+                filhosDir[i] = dir.substring(97 + i * 10, 107 + i * 10).replaceAll("\\s+", "");
+                if(!filhosDir[i].equals("") || dirNum == 0){
+                    todosVazios = false;
+                }
+            }
+            if(todosVazios){
+                String ancestralidade = nomesAncestralidade(dirNum, "", hd);
+                ancestralidade = ancestralidade.substring(0, ancestralidade.length() - 1);
+                dump = dump + "mkdir " + ancestralidade + "\n";
+                System.out.println(dump);
+            }else{
+                for (int i = 0; i < 20; i++) {
+                    if(!filhosDir[i].equals("")){
+                        int num = Integer.parseInt(filhosDir[i]);
+                        System.out.println(num+".");
+                        dump = reescreveEstruturaDoHd(num, dump, hd);
+                    }
+                }
+            }
+            for (int i = 0; i < 20; i++) {
+                filhosArg[i] =  dir.substring(297 + i * 10, 307 + i * 10).replaceAll("\\s+", "");
+                if(!filhosArg[i].equals("")){
+                    int num = Integer.parseInt(filhosArg[i]);
+                    System.out.println(num+".");
+                    dump = reescreveEstruturaDoHd(num, dump,hd);
+                }
+            }
+        }
+
+        return dump;
+    }
+
+    public static String nomesAncestralidade (int dirNum, String ancestralidade, HardDisk hd){
+        String dir = lerStringDoHardDisk(hd, dirNum, 512);
+        String nome = dir.substring(1, 87).replaceAll("\\s+", "");
+        String pai = dir.substring(87, 97).replaceAll("\\s+", "");
+
+        if(dirNum != 0){
+            System.out.println(nome);
+            ancestralidade = nome + "/" + ancestralidade;
+            ancestralidade = nomesAncestralidade(Integer.parseInt(pai), ancestralidade, hd);
+        }else{
+            ancestralidade = "/" + ancestralidade;
+        }
+
+        return ancestralidade;
     }
 }
